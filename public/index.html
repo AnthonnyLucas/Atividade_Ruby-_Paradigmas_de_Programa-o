@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atividade Ruby</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --sidebar: #0f0f0f;
+      --card: #1a1a1a;
+      --card2: #1f1f1f;
+      --accent: #7edd5a;
+      --text: #e8e8e8;
+      --muted: #7a7a7a;
+      --border: rgba(255,255,255,0.07);
+      --input: #242424;
+      --danger: #e05555;
+      --warn: #e8a93a;
+    }
+
+    body {
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    #closed-msg {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    #closed-msg svg { opacity: 0.5; }
+
+    #wrap {
+      display: flex;
+      width: 900px;
+      min-height: 580px;
+      background: var(--bg);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 175px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      padding: 16px 14px 14px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .logo-dot {
+      width: 30px; height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-dot svg { width: 15px; height: 15px; }
+    .sidebar-section {
+      padding: 14px 12px 4px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; margin: 2px 6px;
+      border-radius: 8px; cursor: pointer;
+      color: var(--muted); font-size: 13px;
+      transition: all 0.15s; user-select: none;
+    }
+    .nav-item:hover { background: var(--card2); color: var(--text); }
+    .nav-item.active { background: var(--accent); color: #0f1410; font-weight: 600; }
+    .nav-item.done { color: var(--accent); }
+    .nav-item.done .nav-dot { background: var(--accent); }
+    .nav-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: currentColor; opacity: 0.5; flex-shrink: 0;
+    }
+    .nav-item.active .nav-dot { opacity: 1; background: #0f1410; }
+    .check-icon { font-size: 11px; margin-left: auto; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 22px; border-bottom: 1px solid var(--border);
+      background: var(--sidebar); flex-shrink: 0;
+    }
+    .topbar-title { font-size: 17px; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .progress-bar { height: 3px; background: var(--card2); flex-shrink: 0; }
+    .progress-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+
+    .content { flex: 1; padding: 20px 22px; overflow-y: auto; }
+    .content::-webkit-scrollbar { width: 4px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeIn 0.2s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── CARDS ── */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px; margin-bottom: 16px;
+    }
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .mc-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .mc-value { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .mc-sub   { font-size: 11px; color: var(--accent); }
+
+    /* ── FORM ── */
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+    }
+    .form-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 11px; color: var(--muted);
+      margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .field input {
+      width: 100%; padding: 9px 12px; font-size: 13px;
+      background: var(--input); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(126,221,90,0.12);
+    }
+    .two-col  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .five-col { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+
+    /* ── INSTRUCTION BOX ── */
+    .instr-msg {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(126,221,90,0.06);
+      border: 1px solid rgba(126,221,90,0.18);
+      border-radius: 9px; padding: 12px 14px;
+      margin-bottom: 14px; font-size: 13px;
+      color: var(--muted); line-height: 1.6;
+    }
+    .instr-icon {
+      width: 20px; height: 20px; flex-shrink: 0;
+      background: rgba(126,221,90,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px;
+    }
+    .instr-icon svg { width: 11px; height: 11px; }
+
+    /* ── ERROR BOX ── */
+    .error-msg {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(224,85,85,0.08);
+      border: 1px solid rgba(224,85,85,0.25);
+      border-radius: 8px; padding: 10px 13px;
+      margin-top: 8px; font-size: 12px;
+      color: var(--danger); animation: fadeIn 0.2s ease;
+    }
+    .error-msg.show { display: flex; }
+
+    /* ── BUTTONS ── */
+    .run-btn {
+      width: 100%; padding: 10px; font-size: 13px; font-weight: 600;
+      background: var(--accent); color: #0f1410;
+      border: none; border-radius: 8px;
+      cursor: pointer; transition: opacity 0.15s; margin-top: 4px;
+    }
+    .run-btn:hover { opacity: 0.87; }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .next-btn {
+      display: none; margin-top: 12px; width: 100%; padding: 10px;
+      background: transparent; border: 1px solid var(--accent);
+      border-radius: 8px; color: var(--accent);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; align-items: center;
+      justify-content: center; gap: 8px;
+    }
+    .next-btn.show { display: flex; animation: fadeIn 0.25s ease; }
+    .next-btn:hover { background: rgba(126,221,90,0.1); }
+    .arrow { font-size: 16px; transition: transform 0.2s; display: inline-block; }
+    .next-btn:hover .arrow { transform: translateX(5px); }
+
+    /* ── RESULT BOX ── */
+    .result-box {
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px;
+      margin-top: 14px; display: none;
+    }
+    .result-box.show { display: block; animation: fadeIn 0.2s ease; }
+    .result-label {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .result-line {
+      font-size: 13px; color: var(--text);
+      line-height: 2.2; border-bottom: 1px solid var(--border);
+    }
+    .result-line:last-child { border-bottom: none; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 8px;
+    }
+    .b-pos  { background: rgba(126,221,90,0.15); color: var(--accent); }
+    .b-neg  { background: rgba(224,85,85,0.15);  color: var(--danger); }
+    .b-zero { background: rgba(122,145,120,0.2); color: var(--muted);  }
+    .b-par  { background: rgba(91,196,58,0.12);  color: #7edd5a;       }
+    .b-imp  { background: rgba(232,169,58,0.15); color: var(--warn);   }
+
+    /* ── TABUADA ── */
+    .tab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px,1fr));
+      gap: 6px; margin-top: 10px;
+    }
+    .tab-item {
+      background: var(--input); border: 1px solid var(--border);
+      border-radius: 7px; padding: 7px 10px;
+      font-size: 12px; color: var(--text); text-align: center;
+    }
+    .tab-item strong { color: var(--accent); }
+
+    /* ── STATS ── */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px; margin-top: 10px;
+    }
+    .stat-box {
+      background: var(--input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px;
+    }
+    .stat-label {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px;
+    }
+    .stat-value { font-size: 24px; font-weight: 600; color: var(--accent); }
+
+    /* ── TELA FINAL ── */
+    #pane-final {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 420px; text-align: center; padding: 2.5rem 2rem;
+    }
+    #pane-final.active { display: flex; animation: fadeIn 0.3s ease; }
+    .final-icon {
+      width: 72px; height: 72px;
+      background: rgba(126,221,90,0.12);
+      border: 1px solid rgba(126,221,90,0.25);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.75rem;
+    }
+    .final-icon svg { width: 36px; height: 36px; }
+    .final-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .final-sub   { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 2rem; }
+    .final-btns  { display: flex; gap: 10px; }
+    .btn-restart {
+      padding: 11px 28px; background: var(--accent); color: #0f1410;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-restart:hover { opacity: 0.87; }
+    .btn-close {
+      padding: 11px 28px; background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-close:hover { background: var(--card2); color: var(--text); }
+
+    /* ── LOADING ── */
+    .loading { opacity: 0.6; font-size: 12px; color: var(--muted); margin-top: 8px; display: none; }
+    .loading.show { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- Mensagem exibida ao fechar a interface -->
+  <div id="closed-msg">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="22" stroke="rgba(100,160,80,0.3)" stroke-width="1.5"/>
+      <path d="M16 16l16 16M32 16L16 32" stroke="#7a9178" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <p>Interface encerrada.</p>
+  </div>
+
+  <!-- Interface principal -->
+  <div id="wrap">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-dot">
+          <svg viewBox="0 0 15 15" fill="none">
+            <circle cx="7.5" cy="7.5" r="5.5" stroke="#0f1410" stroke-width="2"/>
+            <circle cx="7.5" cy="7.5" r="2" fill="#0f1410"/>
+          </svg>
+        </div>
+        Ruby App
+      </div>
+      <div class="sidebar-section">Exercícios</div>
+      <div class="nav-item active" id="nav0" onclick="goToTab(0)"><div class="nav-dot"></div> Boas-vindas   <span class="check-icon" id="chk0"></span></div>
+      <div class="nav-item"        id="nav1" onclick="goToTab(1)"><div class="nav-dot"></div> Calculadora   <span class="check-icon" id="chk1"></span></div>
+      <div class="nav-item"        id="nav2" onclick="goToTab(2)"><div class="nav-dot"></div> Análise       <span class="check-icon" id="chk2"></span></div>
+      <div class="nav-item"        id="nav3" onclick="goToTab(3)"><div class="nav-dot"></div> Tabuada       <span class="check-icon" id="chk3"></span></div>
+      <div class="nav-item"        id="nav4" onclick="goToTab(4)"><div class="nav-dot"></div> Estatísticas  <span class="check-icon" id="chk4"></span></div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title" id="page-title">Boas-vindas</div>
+        <div class="topbar-right">
+          <span style="font-size:11px; color:var(--muted);" id="progress-text">1 / 5</span>
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0f1410;">RB</div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="prog" style="width:20%"></div>
+      </div>
+
+      <div class="content">
+
+        <!-- ── EX 1 ── -->
+        <div class="tab-pane active" id="pane0">
+          <div class="cards-row">
+            <div class="metric-card"><div class="mc-label">Exercício</div><div class="mc-value">01</div><div class="mc-sub">Entrada de dados</div></div>
+            <div class="metric-card"><div class="mc-label">Tipo</div><div class="mc-value">String</div><div class="mc-sub">gets.chomp</div></div>
+            <div class="metric-card"><div class="mc-label">Saída</div><div class="mc-value">puts</div><div class="mc-sub">Interpolação</div></div>
+          </div>
+          <div class="instr-msg">
+            <div class="instr-icon"><svg viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#7edd5a" stroke-width="1.2"/><path d="M5.5 5v3" stroke="#7edd5a" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="3.5" r="0.6" fill="#7edd5a"/></svg></div>
+            Olá usuário, por favor me informe o seu nome.
+          </div>
+          <div class="form-card">
+            <div class="form-card-title">Dados do usuário</div>
+            <div class="field">
+              <label>Seu nome</label>
+              <input type="text" id="e1-nome" placeholder="Digite seu nome..." />
+            </div>
+            <div class="error-msg" id="err1">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#e05555" stroke-width="1.2"/><path d="M6.5 4v3" stroke="#e05555" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="9" r="0.6" fill="#e05555"/></svg>
+              <span id="err1-msg">Nome inválido! Por favor insira apenas letras, sem números.</span>
+            </div>
+            <button class="run-btn" id="btn1" onclick="runEx1()" style="margin-top:12px;">Executar ↗</button>
+            <div class="loading" id="load1">Processando no servidor Ruby...</div>
+            <div class="result-box" id="r1">
+              <div class="result-label">Saída do programa</div>
+              <div class="result-line">Bem-vindo ao programa Ruby!</div>
+              <div class="result-line" id="r1-out"></div>
+            </div>
+            <button class="next-btn" id="next0" onclick="goToTab(1)">Próximo exercício <span class="arrow">→</span></button>
+          </div>
+        </div>
+
+        <!-- ── EX 2 ── -->
+        <div class="tab-pane" id="pane1">
+          <div class="cards-row">
+            <div class="metric-card"><div class="mc-label">Exercício</div><div class="mc-value">02</div><div class="mc-sub">Operações</div></div>
+            <div class="metric-card"><div class="mc-label">Operações</div><div class="mc-value">4</div><div class="mc-sub">+ − × ÷</div></div>
+            <div class="metric-card"><div class="mc-label">Tipo</div><div class="mc-value">Integer</div><div class="mc-sub">.to_i / .to_f</div></div>
+          </div>
+          <div class="instr-msg">
+            <div class="instr-icon"><svg viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#7edd5a" stroke-width="1.2"/><path d="M5.5 5v3" stroke="#7edd5a" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="3.5" r="0.6" fill="#7edd5a"/></svg></div>
+            Por favor insira dois números inteiros, eu irei calcular a soma, subtração, multiplicação e divisão entre eles.
+          </div>
+          <div class="form-card">
+            <div class="form-card-title">Calculadora básica</div>
+            <div class="two-col">
+              <div class="field"><label>Primeiro número</label><input type="number" step="1" id="e2-n1" placeholder="0" /></div>
+              <div class="field"><label>Segundo número</label><input type="number" step="1" id="e2-n2" placeholder="0" /></div>
+            </div>
+            <div class="error-msg" id="err2">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#e05555" stroke-width="1.2"/><path d="M6.5 4v3" stroke="#e05555" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="9" r="0.6" fill="#e05555"/></svg>
+              <span id="err2-msg">Por favor insira apenas números inteiros (sem vírgula ou ponto).</span>
+            </div>
+            <button class="run-btn" id="btn2" onclick="runEx2()" style="margin-top:12px;">Calcular ↗</button>
+            <div class="loading" id="load2">Processando no servidor Ruby...</div>
+            <div class="result-box" id="r2">
+              <div class="result-label">Resultados</div>
+              <div id="r2-out"></div>
+            </div>
+            <button class="next-btn" id="next1" onclick="goToTab(2)">Próximo exercício <span class="arrow">→</span></button>
+          </div>
+        </div>
+
+        <!-- ── EX 3 ── -->
+        <div class="tab-pane" id="pane2">
+          <div class="cards-row">
+            <div class="metric-card"><div class="mc-label">Exercício</div><div class="mc-value">03</div><div class="mc-sub">Condicional</div></div>
+            <div class="metric-card"><div class="mc-label">Testes</div><div class="mc-value">2</div><div class="mc-sub">Sinal + Paridade</div></div>
+            <div class="metric-card"><div class="mc-label">Operador</div><div class="mc-value">%</div><div class="mc-sub">Módulo (resto)</div></div>
+          </div>
+          <div class="instr-msg">
+            <div class="instr-icon"><svg viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#7edd5a" stroke-width="1.2"/><path d="M5.5 5v3" stroke="#7edd5a" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="3.5" r="0.6" fill="#7edd5a"/></svg></div>
+            Por favor insira um número inteiro, estarei analisando ele.
+          </div>
+          <div class="form-card">
+            <div class="form-card-title">Análise de número</div>
+            <div class="field"><label>Número inteiro</label><input type="number" step="1" id="e3-n" placeholder="0" /></div>
+            <div class="error-msg" id="err3">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#e05555" stroke-width="1.2"/><path d="M6.5 4v3" stroke="#e05555" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="9" r="0.6" fill="#e05555"/></svg>
+              Por favor insira apenas um número inteiro (sem vírgula ou ponto).
+            </div>
+            <button class="run-btn" id="btn3" onclick="runEx3()" style="margin-top:12px;">Analisar ↗</button>
+            <div class="loading" id="load3">Processando no servidor Ruby...</div>
+            <div class="result-box" id="r3">
+              <div class="result-label">Resultado</div>
+              <div id="r3-out" style="padding:8px 0; font-size:15px; font-weight:600;"></div>
+            </div>
+            <button class="next-btn" id="next2" onclick="goToTab(3)">Próximo exercício <span class="arrow">→</span></button>
+          </div>
+        </div>
+
+        <!-- ── EX 4 ── -->
+        <div class="tab-pane" id="pane3">
+          <div class="cards-row">
+            <div class="metric-card"><div class="mc-label">Exercício</div><div class="mc-value">04</div><div class="mc-sub">Loop</div></div>
+            <div class="metric-card"><div class="mc-label">Estrutura</div><div class="mc-value">.each</div><div class="mc-sub">Intervalo</div></div>
+            <div class="metric-card"><div class="mc-label">Limite</div><div class="mc-value">100</div><div class="mc-sub">Máx. entradas</div></div>
+          </div>
+          <div class="instr-msg">
+            <div class="instr-icon"><svg viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#7edd5a" stroke-width="1.2"/><path d="M5.5 5v3" stroke="#7edd5a" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="3.5" r="0.6" fill="#7edd5a"/></svg></div>
+            Por favor insira dois números inteiros, e eu estarei criando uma tabuada personalizada para esses números.
+          </div>
+          <div class="form-card">
+            <div class="form-card-title">Tabuada personalizada</div>
+            <div class="two-col">
+              <div class="field"><label>Número</label><input type="number" step="1" id="e4-n" placeholder="5" /></div>
+              <div class="field"><label>Até</label><input type="number" step="1" id="e4-lim" placeholder="10" /></div>
+            </div>
+            <div class="error-msg" id="err4">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#e05555" stroke-width="1.2"/><path d="M6.5 4v3" stroke="#e05555" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="9" r="0.6" fill="#e05555"/></svg>
+              <span id="err4-msg">Por favor insira apenas números inteiros (sem vírgula ou ponto).</span>
+            </div>
+            <button class="run-btn" id="btn4" onclick="runEx4()" style="margin-top:12px;">Gerar tabuada ↗</button>
+            <div class="loading" id="load4">Processando no servidor Ruby...</div>
+            <div class="result-box" id="r4">
+              <div class="result-label">Tabuada</div>
+              <div class="tab-grid" id="r4-out"></div>
+            </div>
+            <button class="next-btn" id="next3" onclick="goToTab(4)">Próximo exercício <span class="arrow">→</span></button>
+          </div>
+        </div>
+
+        <!-- ── EX 5 ── -->
+        <div class="tab-pane" id="pane4">
+          <div class="cards-row">
+            <div class="metric-card"><div class="mc-label">Exercício</div><div class="mc-value">05</div><div class="mc-sub">Estatísticas</div></div>
+            <div class="metric-card"><div class="mc-label">Entradas</div><div class="mc-value">5</div><div class="mc-sub">Números inteiros</div></div>
+            <div class="metric-card"><div class="mc-label">Estrutura</div><div class="mc-value">Array</div><div class="mc-sub">.sort .sum</div></div>
+          </div>
+          <div class="instr-msg">
+            <div class="instr-icon"><svg viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#7edd5a" stroke-width="1.2"/><path d="M5.5 5v3" stroke="#7edd5a" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="3.5" r="0.6" fill="#7edd5a"/></svg></div>
+            Por favor insira cinco números inteiros, e eu estarei calculando o maior número, o menor número, a média de todos e a mediana.
+          </div>
+          <div class="form-card">
+            <div class="form-card-title">5 números inteiros</div>
+            <div class="field">
+              <label>Números</label>
+              <div class="five-col">
+                <input type="number" step="1" id="e5-0" placeholder="Nº 1" />
+                <input type="number" step="1" id="e5-1" placeholder="Nº 2" />
+                <input type="number" step="1" id="e5-2" placeholder="Nº 3" />
+                <input type="number" step="1" id="e5-3" placeholder="Nº 4" />
+                <input type="number" step="1" id="e5-4" placeholder="Nº 5" />
+              </div>
+            </div>
+            <div class="error-msg" id="err5">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#e05555" stroke-width="1.2"/><path d="M6.5 4v3" stroke="#e05555" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="9" r="0.6" fill="#e05555"/></svg>
+              Todos os 5 campos são obrigatórios e devem conter apenas números inteiros (sem vírgula ou ponto).
+            </div>
+            <button class="run-btn" id="btn5" onclick="runEx5()" style="margin-top:12px;">Calcular estatísticas ↗</button>
+            <div class="loading" id="load5">Processando no servidor Ruby...</div>
+            <div class="result-box" id="r5">
+              <div class="result-label">Resultados</div>
+              <div class="metrics-grid" id="r5-out"></div>
+            </div>
+            <button class="next-btn" id="next4" onclick="goToFinal()">Ver resultado final <span class="arrow">→</span></button>
+          </div>
+        </div>
+
+        <!-- ── TELA FINAL ── -->
+        <div id="pane-final">
+          <div class="final-icon">
+            <svg viewBox="0 0 36 36" fill="none">
+              <path d="M7 18l8 8L29 10" stroke="#7edd5a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="final-title">Todos os exercícios foram concluídos!</div>
+          <div class="final-sub" id="final-sub">
+            Você completou os 5 exercícios da atividade Ruby.<br>
+            Deseja reiniciar ou encerrar a interface?
+          </div>
+          <div class="final-btns">
+            <button class="btn-restart" onclick="restart()">↺ Reiniciar</button>
+            <button class="btn-close"   onclick="closeApp()">✕ Fechar</button>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /wrap -->
+
+  <script>
+    // ── Endereço base do servidor Ruby ──────────────────────
+    // Quando o HTML é servido pelo Sinatra, as chamadas são relativas.
+    // Se abrir o HTML direto (sem servidor), mude para 'http://localhost:4567'
+    const API = '';
+
+    const titles   = ['Boas-vindas','Calculadora','Análise de número','Tabuada','Estatísticas'];
+    let   userName = '';
+
+    // ── Navegação entre exercícios ──────────────────────────
+    function goToTab(idx) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById('pane-final').classList.remove('active');
+      document.getElementById('pane' + idx).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx));
+      document.getElementById('page-title').textContent     = titles[idx];
+      document.getElementById('progress-text').textContent  = (idx + 1) + ' / 5';
+      document.getElementById('prog').style.width           = ((idx + 1) * 20) + '%';
+    }
+
+    function goToFinal() {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById('pane-final').classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-title').textContent    = 'Concluído';
+      document.getElementById('progress-text').textContent = '5 / 5';
+      document.getElementById('prog').style.width          = '100%';
+      document.getElementById('final-sub').innerHTML =
+        `<strong style="color:var(--accent)">${userName}</strong>, você completou os 5 exercícios da atividade Ruby.<br>Deseja reiniciar ou encerrar a interface?`;
+    }
+
+    // ── Utilitários de UI ───────────────────────────────────
+    function markDone(idx) {
+      document.getElementById('chk' + idx).textContent = '✓';
+      document.getElementById('nav' + idx).classList.add('done');
+    }
+    function showEl(id)  { document.getElementById(id).classList.add('show'); }
+    function hideEl(id)  { document.getElementById(id).classList.remove('show'); }
+    function setLoading(n, on) {
+      document.getElementById('btn' + n).disabled = on;
+      document.getElementById('load' + n).classList.toggle('show', on);
+    }
+
+    // ── Função central de comunicação com o back-end Ruby ───
+    // Envia dados em JSON para uma rota do servidor Sinatra
+    // e retorna a resposta já convertida de JSON para objeto JS
+    async function chamarBackend(rota, dados) {
+      const resposta = await fetch(API + rota, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(dados)   // Converte objeto JS → string JSON
+      });
+      return resposta.json();           // Converte string JSON → objeto JS
+    }
+
+    // ── Reiniciar ───────────────────────────────────────────
+    function restart() {
+      ['r1','r2','r3','r4','r5','next0','next1','next2','next3','next4',
+       'err1','err2','err3','err4','err5'].forEach(id => hideEl(id));
+      for (let i = 0; i < 5; i++) {
+        document.getElementById('chk' + i).textContent = '';
+        document.getElementById('nav' + i).classList.remove('done');
+      }
+      ['e1-nome','e2-n1','e2-n2','e3-n','e4-n','e4-lim'].forEach(id =>
+        document.getElementById(id).value = ''
+      );
+      [0,1,2,3,4].forEach(i => document.getElementById('e5-' + i).value = '');
+      userName = '';
+      goToTab(0);
+    }
+
+    function closeApp() {
+      document.getElementById('wrap').style.display       = 'none';
+      document.getElementById('closed-msg').style.display = 'flex';
+    }
+
+    // ── EXERCÍCIO 1 ─────────────────────────────────────────
+    // Envia o nome para o Ruby validar e formatar a saudação
+    async function runEx1() {
+      const nome = document.getElementById('e1-nome').value.trim();
+      setLoading(1, true);
+      try {
+        const res = await chamarBackend('/ex1', { nome });
+        if (!res.ok) {
+          document.getElementById('err1-msg').textContent = res.erro;
+          showEl('err1'); return;
+        }
+        hideEl('err1');
+        userName = nome;
+        document.getElementById('r1-out').innerHTML =
+          `Olá, <strong style="color:var(--accent)">${nome}</strong>! Seja bem-vindo(a)!`;
+        showEl('r1'); markDone(0); showEl('next0');
+      } catch { showEl('err1'); }
+      finally  { setLoading(1, false); }
+    }
+
+    // ── EXERCÍCIO 2 ─────────────────────────────────────────
+    // Envia os dois números para o Ruby calcular as 4 operações
+    async function runEx2() {
+      const a = document.getElementById('e2-n1').value;
+      const b = document.getElementById('e2-n2').value;
+      setLoading(2, true);
+      try {
+        const res = await chamarBackend('/ex2', { a, b });
+        if (!res.ok) {
+          document.getElementById('err2-msg').textContent = res.erro;
+          showEl('err2'); return;
+        }
+        hideEl('err2');
+        const divHtml = res.divisao.toString().includes('Impossível')
+          ? `<span style="color:var(--danger)">${res.divisao}</span>`
+          : `<strong style="color:var(--accent)">${res.divisao}</strong>`;
+        document.getElementById('r2-out').innerHTML = `
+          <div class="result-line">${a} + ${b} = <strong style="color:var(--accent)">${res.soma}</strong></div>
+          <div class="result-line">${a} − ${b} = <strong style="color:var(--accent)">${res.subtracao}</strong></div>
+          <div class="result-line">${a} × ${b} = <strong style="color:var(--accent)">${res.multiplicacao}</strong></div>
+          <div class="result-line">${a} ÷ ${b} = ${divHtml}</div>
+        `;
+        showEl('r2'); markDone(1); showEl('next1');
+      } catch { showEl('err2'); }
+      finally  { setLoading(2, false); }
+    }
+
+    // ── EXERCÍCIO 3 ─────────────────────────────────────────
+    // Envia o número para o Ruby determinar sinal e paridade
+    async function runEx3() {
+      const numero = document.getElementById('e3-n').value;
+      setLoading(3, true);
+      try {
+        const res = await chamarBackend('/ex3', { numero });
+        if (!res.ok) { showEl('err3'); return; }
+        hideEl('err3');
+        const badgeSinal = {
+          'Positivo': 'b-pos', 'Negativo': 'b-neg', 'Zero': 'b-zero'
+        }[res.sinal];
+        const badgePar = res.paridade === 'Par' ? 'b-par' : 'b-imp';
+        document.getElementById('r3-out').innerHTML =
+          `<span style="font-size:18px; color:var(--text)">${res.numero}</span>
+           <span class="badge ${badgeSinal}">${res.sinal}</span>
+           <span class="badge ${badgePar}">${res.paridade}</span>`;
+        showEl('r3'); markDone(2); showEl('next2');
+      } catch { showEl('err3'); }
+      finally  { setLoading(3, false); }
+    }
+
+    // ── EXERCÍCIO 4 ─────────────────────────────────────────
+    // Envia número e limite para o Ruby gerar as linhas da tabuada
+    async function runEx4() {
+      const numero = document.getElementById('e4-n').value;
+      const limite = document.getElementById('e4-lim').value;
+      setLoading(4, true);
+      try {
+        const res = await chamarBackend('/ex4', { numero, limite });
+        if (!res.ok) {
+          document.getElementById('err4-msg').textContent = res.erro;
+          showEl('err4'); return;
+        }
+        hideEl('err4');
+        // Monta o HTML da tabuada a partir do array de linhas devolvido pelo Ruby
+        const html = res.linhas.map(l =>
+          `<div class="tab-item">${res.numero} × ${l.i} = <strong>${l.resultado}</strong></div>`
+        ).join('');
+        document.getElementById('r4-out').innerHTML = html;
+        showEl('r4'); markDone(3); showEl('next3');
+      } catch { showEl('err4'); }
+      finally  { setLoading(4, false); }
+    }
+
+    // ── EXERCÍCIO 5 ─────────────────────────────────────────
+    // Envia array de 5 números para o Ruby calcular as estatísticas
+    async function runEx5() {
+      const numeros = [0,1,2,3,4].map(i => document.getElementById('e5-' + i).value);
+      setLoading(5, true);
+      try {
+        const res = await chamarBackend('/ex5', { numeros });
+        if (!res.ok) { showEl('err5'); return; }
+        hideEl('err5');
+        document.getElementById('r5-out').innerHTML = `
+          <div class="stat-box"><div class="stat-label">Maior</div><div class="stat-value">${res.maior}</div></div>
+          <div class="stat-box"><div class="stat-label">Menor</div><div class="stat-value">${res.menor}</div></div>
+          <div class="stat-box"><div class="stat-label">Média</div><div class="stat-value">${res.media}</div></div>
+          <div class="stat-box"><div class="stat-label">Mediana</div><div class="stat-value">${res.mediana}</div></div>
+        `;
+        showEl('r5'); markDone(4); showEl('next4');
+      } catch { showEl('err5'); }
+      finally  { setLoading(5, false); }
+    }
+  </script>
+</body>
+</html>
